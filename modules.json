@@ -1,0 +1,17 @@
+[
+    {
+        "module_name": "water",
+        "sprite_name": "Water.PNG",
+        "neighbors": ["sand"]
+    },
+    {
+        "module_name": "sand",
+        "sprite_name": "sand_0.png",
+        "neighbors": ["grass", "water"]
+    },
+    {
+        "module_name": "grass",
+        "sprite_name": "Grass.PNG",
+        "neighbors": ["sand"]
+    }
+]
