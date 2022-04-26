@@ -1,6 +1,3 @@
-import os
-import sys
-import glob
 import json
 import time
 import random
@@ -9,50 +6,12 @@ from pprint import pprint
 import pygame
 from pygame.locals import *
 
+from Module import Module
+
 GRID_SIZE = 32
 TILE_SIZE = 32
 WINDOW_SIZE = GRID_SIZE * TILE_SIZE
-TOP = 0
-RIGHT = 1
-BOTTOM = 2
-LEFT = 3
 
-class Module(object):
-    def __init__(self, name, data, rotation):
-        self.name = name
-        self.sprite_path = data["sprite_name"]
-        self.count = 0
-        self.neighbors = data["neighbors"]
-        self.rotation = rotation
-        self.links = []
-        for i in range(4):
-            self.links.append(set())
-
-        self.sprite = pygame.image.load(
-            f"""./assets/{self.sprite_path}""")
-        # Transform it to a pygame friendly format (quicker drawing)
-        self.sprite.convert()
-        self.sprite = pygame.transform.scale(self.sprite,
-                                            (TILE_SIZE, TILE_SIZE))
-        # ALL PYGAME ROTATIONS ARE COUNTERCLOCKWISE
-        if self.rotation != 0:
-            self.sprite = pygame.transform.rotate(self.sprite, self.rotation)
-        top = self.neighbors[0]
-        right = self.neighbors[1]
-        bottom = self.neighbors[2]
-        left = self.neighbors[3]
-        if self.rotation == 90:
-            self.neighbors = [right, bottom, left, top]
-        elif self.rotation == 180:
-            self.neighbors = [bottom, left, top, right]
-        elif self.rotation == 270:
-            self.neighbors = [left, top, right, bottom]
-
-    def create_link(self, nodeB, direction):
-        self.links[direction].add(nodeB)
-
-    def __repr__(self):
-        return f"{self.name} / {self.count}"
 
 class App(object):
     def __init__(self):
@@ -65,7 +24,6 @@ class App(object):
 
         self.modules = {}
         self.load_modules_data("./path.json")
-        pprint(self.modules)
         print(f"{len(self.modules)} modules")
 
         # Initialize map
@@ -74,8 +32,8 @@ class App(object):
             self.map.append([set([m for m in self.modules.values()])] *
                             GRID_SIZE)
         # Perform WFC on the map
-        self.remaining_cells_cound = GRID_SIZE * GRID_SIZE
         self.waveshift_function_collapse()
+        pprint(self.modules)
 
 #########################################
 # Utility functions
@@ -86,7 +44,7 @@ class App(object):
         for module in modules_data:
             for rotation in module["rotations"]:
                 name = f"""{module["module_name"]}_{rotation}"""
-                self.modules[name] = Module(name, module, rotation)
+                self.modules[name] = Module(name, module, rotation, TILE_SIZE)
 
         self.create_links()
 
@@ -233,7 +191,7 @@ class App(object):
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
-                sys.exit()
+                exit()
 
         delta = time.time() - self.endTime
         if delta < self.deltaTime:

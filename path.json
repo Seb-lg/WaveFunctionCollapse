@@ -2,6 +2,7 @@
     {
         "module_name": "empty",
         "sprite_name": "empty.png",
+        "self_attracted": 2,
         "rotations": [0],
         "neighbors": [
             [0],
