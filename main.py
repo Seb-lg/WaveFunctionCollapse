@@ -6,11 +6,12 @@ from pprint import pprint
 import pygame
 from pygame.locals import *
 
-from Module import Module
+from Module import Module, Position
 
 GRID_SIZE = 32
 TILE_SIZE = 32
 WINDOW_SIZE = GRID_SIZE * TILE_SIZE
+MAX_CONSECUTIVE_OVERRIDES = 20
 
 
 class App(object):
@@ -23,17 +24,23 @@ class App(object):
         self.endTime = time.time()
 
         self.modules = {}
+        self.socket_types_count = 0
         self.load_modules_data("./path.json")
-        print(f"{len(self.modules)} modules")
+        print(f"{len(self.modules)} modules, {self.socket_types_count + 1} socket types")
 
         # Initialize map
         self.map = []
         for x in range(GRID_SIZE):
             self.map.append([set([m for m in self.modules.values()])] *
                             GRID_SIZE)
+
+        self.last_chosen_module = None
+        self.overrides_count = 0
+        self.consecutive_overrides_count = 0
         # Perform WFC on the map
         self.waveshift_function_collapse()
-        pprint(self.modules)
+        pprint(list(self.modules.values()))
+        print(f"{self.overrides_count} overrides")
 
 #########################################
 # Utility functions
@@ -42,10 +49,13 @@ class App(object):
             modules_data = json.load(f)
         # Create all modules
         for module in modules_data:
+            for directions in module["neighbors"]:
+                for socket_type in directions:
+                    if socket_type > self.socket_types_count:
+                        self.socket_types_count = socket_type
             for rotation in module["rotations"]:
                 name = f"""{module["module_name"]}_{rotation}"""
                 self.modules[name] = Module(name, module, rotation, TILE_SIZE)
-
         self.create_links()
 
     def create_links(self):
@@ -77,15 +87,26 @@ class App(object):
         while not self.handle_loop():
             self.display_map()
 
-    def get_least_represented_module(self, possible_modules):
-        lowest = GRID_SIZE * GRID_SIZE
-        res = []
-        for module in possible_modules:
-            if module.count < lowest:
-                lowest = module.count
-                res = [module]
-            elif module.count == lowest:
-                res.append(module)
+    def choose_module_from_possibilities(self, cell, possible_modules, type="lowest"):
+        if type == "lowest":
+            res = []
+            lowest = GRID_SIZE * GRID_SIZE
+            for module in possible_modules:
+                if module.count < lowest:
+                    lowest = module.count
+                    res = [module]
+                elif module.count == lowest:
+                    res.append(module)
+        elif type == "override":
+            res = list(possible_modules)
+            if self.last_chosen_module and self.last_chosen_module in possible_modules:
+                # print(self.last_chosen_module.self_attraction)
+                if self.last_chosen_module.self_attraction:
+                    self.overrides_count += 1
+                    self.consecutive_overrides_count += 1
+                    if self.consecutive_overrides_count < MAX_CONSECUTIVE_OVERRIDES:
+                        return self.last_chosen_module
+            self.consecutive_overrides_count = 0
         return random.choice(res)
 
 
@@ -99,7 +120,8 @@ class App(object):
             cell = self.get_minimal_entropy_cell()
             if cell is None:
                 break
-            module = self.get_least_represented_module(self.map[cell.y][cell.x])
+            module = self.choose_module_from_possibilities(cell, self.map[cell.y][cell.x], "lowest")
+            self.last_chosen_module = module
             module.count += 1
             self.map[cell.y][cell.x] = {module}
             # Now propagate to neighbors
@@ -204,15 +226,6 @@ class App(object):
             for x in y:
                 print(f"{x.__repr__() : <20}", end="")
             print()
-
-
-class Position(object):
-    def __init__(self, y, x):
-        self.x = x
-        self.y = y
-
-    def __repr__(self):
-        return f"x:{self.x} y:{self.y}"
 
 
 if __name__ == "__main__":

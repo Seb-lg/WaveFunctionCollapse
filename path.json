@@ -2,7 +2,7 @@
     {
         "module_name": "empty",
         "sprite_name": "empty.png",
-        "self_attracted": 2,
+        "self_attraction": false,
         "rotations": [0],
         "neighbors": [
             [0],
@@ -36,6 +36,7 @@
     {
         "module_name": "hor",
         "sprite_name": "hor.png",
+        "self_attraction": false,
         "rotations": [0, 90],
         "neighbors": [
             [0],
@@ -94,6 +95,120 @@
         "rotations": [0, 90, 180, 270],
         "neighbors": [
           [1],
+          [1],
+          [0],
+          [0]
+        ]
+    },
+
+
+    {
+        "module_name": "square_1",
+        "sprite_name": "square_1.png",
+        "rotations": [0],
+        "neighbors": [
+            [0],
+            [0],
+            [0],
+            [0]
+          ]
+    },
+    {
+        "module_name": "triangle_1",
+        "sprite_name": "triangle_1.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+            [0],
+            [0],
+            [0],
+            [0]
+          ]
+    },
+    {
+        "module_name": "hor_1",
+        "sprite_name": "hor_1.png",
+        "self_attraction": true,
+        "rotations": [0, 90],
+        "neighbors": [
+            [0],
+            [2],
+            [0],
+            [2]
+          ]
+    },
+    {
+        "module_name": "hub_1",
+        "sprite_name": "hub_1.png",
+        "rotations": [0],
+        "neighbors": [
+          [2],
+          [2],
+          [2],
+          [2]
+        ]
+    },
+    {
+        "module_name": "end_1",
+        "sprite_name": "end_1.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [0],
+          [0],
+          [2],
+          [0]
+        ]
+    },
+    {
+        "module_name": "T_1",
+        "sprite_name": "T_1.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [2],
+          [2],
+          [2],
+          [0]
+        ]
+    },
+    {
+        "module_name": "turn_1",
+        "sprite_name": "turn_1.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [2],
+          [2],
+          [0],
+          [0]
+        ]
+    },
+    {
+        "module_name": "turn_sharp_1",
+        "sprite_name": "turn_sharp_1.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [2],
+          [2],
+          [0],
+          [0]
+        ]
+    },
+
+    {
+        "module_name": "hor_1_0",
+        "sprite_name": "hor_1_0.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [0],
+          [1],
+          [0],
+          [2]
+        ]
+    },
+    {
+        "module_name": "turn_sharp_1_0",
+        "sprite_name": "turn_sharp_1_0.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [2],
           [1],
           [0],
           [0]

@@ -8,6 +8,7 @@ class Module(object):
         self.count = 0
         self.name = name
         self.rotation = rotation
+        self.self_attraction = data.get("self_attraction", 1)
 
         self.neighbors = data["neighbors"]
         self.links = []
@@ -41,4 +42,13 @@ class Module(object):
         self.links[direction].add(nodeB)
 
     def __repr__(self):
-        return f"{self.name} / {self.count}"
+        return f"{self.name:<20} {self.count}"
+
+
+class Position(object):
+    def __init__(self, y, x):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        return f"x:{self.x} y:{self.y}"
