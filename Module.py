@@ -18,8 +18,12 @@ class Module(object):
         self.load_sprite(data["sprite_name"], tile_size)
 
     def load_sprite(self, sprite_path, tile_size):
-        self.sprite = pygame.image.load(
-            f"""./assets/{sprite_path}""")
+        try:
+            self.sprite = pygame.image.load(
+                f"""./assets/{sprite_path}""")
+        except:
+            print(f"""Error Loading ./assets/{sprite_path}""")
+            exit()
         # Transform it to a pygame friendly format (quicker drawing)
         self.sprite.convert()
         self.sprite = pygame.transform.scale(self.sprite,
