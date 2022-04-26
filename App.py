@@ -4,110 +4,203 @@ import glob
 import json
 import time
 import random
+from pprint import pprint
 
 import pygame
 from pygame.locals import *
 
-GRID_SIZE = 64
-TILE_SIZE = 16
+GRID_SIZE = 32
+TILE_SIZE = 32
 WINDOW_SIZE = GRID_SIZE * TILE_SIZE
+TOP = 0
+RIGHT = 1
+BOTTOM = 2
+LEFT = 3
 
+class Module(object):
+    def __init__(self, name, data, rotation):
+        self.name = name
+        self.sprite_path = data["sprite_name"]
+        self.count = 0
+        self.neighbors = data["neighbors"]
+        self.rotation = rotation
+        self.links = []
+        for i in range(4):
+            self.links.append(set())
+
+        self.sprite = pygame.image.load(
+            f"""./assets/{self.sprite_path}""")
+        # Transform it to a pygame friendly format (quicker drawing)
+        self.sprite.convert()
+        self.sprite = pygame.transform.scale(self.sprite,
+                                            (TILE_SIZE, TILE_SIZE))
+        # ALL PYGAME ROTATIONS ARE COUNTERCLOCKWISE
+        if self.rotation != 0:
+            self.sprite = pygame.transform.rotate(self.sprite, self.rotation)
+        top = self.neighbors[0]
+        right = self.neighbors[1]
+        bottom = self.neighbors[2]
+        left = self.neighbors[3]
+        if self.rotation == 90:
+            self.neighbors = [right, bottom, left, top]
+        elif self.rotation == 180:
+            self.neighbors = [bottom, left, top, right]
+        elif self.rotation == 270:
+            self.neighbors = [left, top, right, bottom]
+
+    def create_link(self, nodeB, direction):
+        self.links[direction].add(nodeB)
+
+    def __repr__(self):
+        return f"{self.name} / {self.count}"
 
 class App(object):
     def __init__(self):
+        random.seed(42)
         pygame.init()
         pygame.display.set_caption("WFC")
         self.display = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
-        self.deltaTime = 0.0001
+        self.deltaTime = 0.01
         self.endTime = time.time()
 
-        self.max_recursion_depth = 0
+        self.modules = {}
+        self.load_modules_data("./path.json")
+        pprint(self.modules)
+        print(f"{len(self.modules)} modules")
 
-        # Handle modules data loading
-        with open("./modules.json", "r") as f:
-            self.modules_data = json.load(f)
-        for x in range(len(self.modules_data)):
-            tmp_neighbors = self.modules_data[x]["neighbors"]
-            self.modules_data[x]["neighbors"] = []
-            for z in tmp_neighbors:
-                self.modules_data[x]["neighbors"].append(
-                    self.get_module_index(z))
-        # Load sprites
-        self.sprites = []
-        self.load_sprites()
         # Initialize map
         self.map = []
         for x in range(GRID_SIZE):
-            self.map.append([set([x for x in range(len(self.modules_data))])] *
+            self.map.append([set([m for m in self.modules.values()])] *
                             GRID_SIZE)
         # Perform WFC on the map
         self.remaining_cells_cound = GRID_SIZE * GRID_SIZE
         self.waveshift_function_collapse()
-        print(self.max_recursion_depth)
+
+#########################################
+# Utility functions
+    def load_modules_data(self, filepath):
+        with open(filepath, "r") as f:
+            modules_data = json.load(f)
+        # Create all modules
+        for module in modules_data:
+            for rotation in module["rotations"]:
+                name = f"""{module["module_name"]}_{rotation}"""
+                self.modules[name] = Module(name, module, rotation)
+
+        self.create_links()
+
+    def create_links(self):
+        # For each module
+        for name, module in self.modules.items():
+            # For each direction
+            for direction, matching_cell_socket_types in enumerate(module.neighbors):
+                # For each matching socket type (each direction can have multiple socket types)
+                for matching_cell_socket_type in matching_cell_socket_types:
+                    # Add all matching sockets
+                    for b_name, b_module in self.modules.items():
+                        b_socket_type = b_module.neighbors[self.get_opposite_direction(direction)]
+                        if matching_cell_socket_type in b_socket_type:
+                            self.create_link(module, direction, b_module)
+
+    def create_link(self, nodeA, direction, nodeB):
+        nodeA.create_link(nodeB, direction)
+        # print('-'*20)
+        # print(f"from {nodeA} to {nodeB} / {direction}")
+        direction = self.get_opposite_direction(direction)
+        # print(f"from {nodeB} to {nodeA} / {direction}")
+        nodeB.create_link(nodeA, direction)
+
+    def get_opposite_direction(self, dir):
+        return (dir + 2) % 4
 
     def launch(self):
         """ For now, is only used to keep the window opened """
         while not self.handle_loop():
             self.display_map()
 
+    def get_least_represented_module(self, possible_modules):
+        lowest = GRID_SIZE * GRID_SIZE
+        res = []
+        for module in possible_modules:
+            if module.count < lowest:
+                lowest = module.count
+                res = [module]
+            elif module.count == lowest:
+                res.append(module)
+        return random.choice(res)
+
+
 #########################################
 # WFC functions
     def waveshift_function_collapse(self):
-        while self.is_not_finished():
-            print("==========")
-            # Update the display so we can see the algorithm working in real time
+        while 1:
             self.handle_loop()
+            # Update the display so we can see the algorithm working in real time
             # Get the next cell to update
             cell = self.get_minimal_entropy_cell()
-            # Randomly choose a module from the possible modules at this position
-            module = random.choice(list(self.map[cell.y][cell.x]))
-            self.map[cell.y][cell.x] = [module]
-            # Display the change
-            self.display.blit(
-                self.sprites[list(self.map[cell.y][cell.x])[0]],
-                (cell.x * TILE_SIZE, cell.y * TILE_SIZE),
-            )
+            if cell is None:
+                break
+            module = self.get_least_represented_module(self.map[cell.y][cell.x])
+            module.count += 1
+            self.map[cell.y][cell.x] = {module}
             # Now propagate to neighbors
-            self.update_possibilities(cell, 0)
+            self.update_possibilities(cell, 20)
+            self.display_map()
+
 
     def update_possibilities(self, cell, depth):
-        print("depth", depth)
-        if depth > self.max_recursion_depth:
-            self.max_recursion_depth = depth
         # End of recursion conditions
-        to_be_updated_neighbors = []
         # if depth == 0:
         #     return
-        # Create a list of all possible modules based on the ones in the selected cell
-        possible_modules = set()
-        cell_modules = self.map[cell.y][cell.x]
-        for cell_module in cell_modules:
-            for elem in self.modules_data[cell_module]["neighbors"]:
-                possible_modules.add(elem)
-            possible_modules.add(cell_module)
-        # Get neighboring cells
-        neighbors = self.get_neighbors(cell)
-        # Remove all non compatible modules in the neighbors
-        for neighbor in neighbors:
-            tmp = set()
-            for neighbor_possible_module in self.map[neighbor.y][neighbor.x]:
-                if neighbor_possible_module in possible_modules:
-                    tmp.add(neighbor_possible_module)
-            # If something has changed (a collapse has been made) add the neighbor
-            # to the to-be-updated neighbors list
-            if set(self.map[neighbor.y][neighbor.x]) != tmp:
-                to_be_updated_neighbors.append(neighbor)
-                self.map[neighbor.y][neighbor.x] = tmp
-        if len(to_be_updated_neighbors) == 0:
-            print("not to neighbors")
+
+        to_be_updated_neighbors = set()
+        # Up neighbor
+        neighbor = Position(cell.y - 1, cell.x)
+        if cell.y > 0 and len(self.map[neighbor.y][neighbor.x]) > 1:
+            to_be_updated_neighbors.update(self.update_neighbor(cell, neighbor, 0))
+        # Right neighbor
+        neighbor = Position(cell.y, cell.x + 1)
+        if cell.x < GRID_SIZE - 1 and len(self.map[neighbor.y][neighbor.x]) > 1:
+            to_be_updated_neighbors.update(self.update_neighbor(cell, neighbor, 1))
+        # Down neighbor
+        neighbor = Position(cell.y + 1, cell.x)
+        if cell.y < GRID_SIZE - 1 and len(self.map[neighbor.y][neighbor.x]) > 1:
+            to_be_updated_neighbors.update(self.update_neighbor(cell, neighbor, 2))
+        # Left neighbor
+        neighbor = Position(cell.y, cell.x - 1)
+        if cell.x > 0 and len(self.map[neighbor.y][neighbor.x]) > 1:
+            to_be_updated_neighbors.update(self.update_neighbor(cell, neighbor, 3))
+
         # Propagate the collapse to neighbor which had changes
         for neighbor in to_be_updated_neighbors:
-            self.update_possibilities(neighbor, depth + 1)
+            self.update_possibilities(neighbor, depth - 1)
+
+    def update_neighbor(self, cell, neighbor, direction):
+        out = set()
+        possible_modules = set()
+        cell_modules = self.map[cell.y][cell.x]
+        # For each possible module of the cell
+        for cell_module in cell_modules:
+            # Add the possibilities based on this direction
+            for module in cell_module.links[direction]:
+                possible_modules.add(module)
+        # Remove impossible modules in the upper neighbor
+        tmp = set()
+        # For each possible module in the neighbor, remove impossible modules
+        for neighbor_possible_module in self.map[neighbor.y][neighbor.x]:
+            if neighbor_possible_module in possible_modules:
+                tmp.add(neighbor_possible_module)
+        # Add the neighbor to the to-be-updated neighbors list if a change has been made
+        if set(self.map[neighbor.y][neighbor.x]) != tmp:
+            self.map[neighbor.y][neighbor.x] = tmp
+            out.add(neighbor)
+        return out
 
     def get_minimal_entropy_cell(self):
         """ Returns the cell with the lowest entropy of all, if multiple cells
         have the same entropy, choose one at random """
-        minimal_entropy = len(self.modules_data)
+        minimal_entropy = len(self.modules)
         minimal_entropy_cells = []
         for y in range(GRID_SIZE):
             for x in range(GRID_SIZE):
@@ -121,63 +214,19 @@ class App(object):
                 # Add to the list of lowest entropy cells
                 elif len(self.map[y][x]) == minimal_entropy:
                     minimal_entropy_cells.append(Position(y, x))
-        # Choose a random minimum entropy cell
-        return random.choice(minimal_entropy_cells)
-
-#########################################
-# Utility functions
-    def get_neighbors(self, cell):
-        """ Returns all valid neighbors with an entropy > 1 """
-        neighbors = []
-        if cell.y > 0:  # Up
-            neighbors.append(Position(cell.y - 1, cell.x))
-        if cell.y < GRID_SIZE - 1:  # Down
-            neighbors.append(Position(cell.y + 1, cell.x))
-        if cell.x > 0:  # Left
-            neighbors.append(Position(cell.y, cell.x - 1))
-        if cell.x < GRID_SIZE - 1:  # Right
-            neighbors.append(Position(cell.y, cell.x + 1))
-        # Remove already collapsed neighbors, so we don't iterate twice on them
-        out = []
-        for neighbor in neighbors:
-            if len(self.map[neighbor.y][neighbor.x]) > 1:
-                out.append(neighbor)
-        return out
-
-    def get_module_index(self, module_name):
-        """ Returns the index associated to the module name, exit if not found"""
-        for idx, module in enumerate(self.modules_data):
-            if module_name == module["module_name"]:
-                return idx
-        exit(84)
-
-    def is_not_finished(self):
-        """ Returns true if at least one cell has an entropy > 1
-        (meaning we should keep the WFC running) """
-        for y in range(GRID_SIZE):
-            for x in range(GRID_SIZE):
-                if len(self.map[y][x]) != 1:
-                    return True
-        return False
+        if len(minimal_entropy_cells) > 0:
+            # Choose a random minimum entropy cell
+            return random.choice(minimal_entropy_cells)
+        return None
 
 #########################################
 # Display functions
     def display_map(self):
-        pass
-        # for y in range(GRID_SIZE):
-        # for x in range(GRID_SIZE):
-        # if len(self.map[y][x]) == 1:
-        #     self.display.blit(self.sprites[list(self.map[y][x])[0]], (x*TILE_SIZE, y*TILE_SIZE))
-
-    def load_sprites(self):
-        for module in self.modules_data:
-            tmp_sprite = pygame.image.load(
-                f"""./assets/{module["sprite_name"]}""")
-            # Transform it to a pygame friendly format (quicker drawing)
-            tmp_sprite.convert()
-            tmp_sprite = pygame.transform.scale(tmp_sprite,
-                                                (TILE_SIZE, TILE_SIZE))
-            self.sprites.append(tmp_sprite)
+        for y in range(GRID_SIZE):
+            for x in range(GRID_SIZE):
+                if len(self.map[y][x]) == 1:
+                    module = list(self.map[y][x])[0]
+                    self.display.blit(module.sprite, (x*TILE_SIZE, y*TILE_SIZE))
 
     def handle_loop(self):
         pygame.display.update()
@@ -190,6 +239,13 @@ class App(object):
         if delta < self.deltaTime:
             time.sleep(self.deltaTime - delta)
         self.endTime = time.time()
+
+    def debug_map(self):
+        print('='*20)
+        for y in self.map:
+            for x in y:
+                print(f"{x.__repr__() : <20}", end="")
+            print()
 
 
 class Position(object):

@@ -2,16 +2,41 @@
     {
         "module_name": "water",
         "sprite_name": "Water.PNG",
-        "neighbors": ["sand"]
+        "neighbors": [
+            ["sand"],
+            ["sand"],
+            ["sand"],
+            ["sand"]
+          ]
     },
     {
         "module_name": "sand",
         "sprite_name": "sand_0.png",
-        "neighbors": ["grass", "water"]
+        "neighbors": [
+            ["grass", "water"],
+            ["grass", "water"],
+            ["grass", "water"],
+            ["grass", "water"]
+          ]
     },
     {
         "module_name": "grass",
         "sprite_name": "Grass.PNG",
-        "neighbors": ["sand"]
+        "neighbors": [
+          ["sand", "floor"],
+          ["sand", "floor"],
+          ["sand", "floor"],
+          ["sand", "floor"]
+        ]
+    },
+    {
+        "module_name": "floor",
+        "sprite_name": "floor_1.png",
+        "neighbors": [
+          ["grass"],
+          ["grass"],
+          ["grass"],
+          ["grass"]
+        ]
     }
 ]
