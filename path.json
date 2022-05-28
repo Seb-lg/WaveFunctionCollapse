@@ -100,8 +100,17 @@
           [0]
         ]
     },
-
-
+    {
+        "module_name": "square_4",
+        "sprite_name": "square_4.png",
+        "rotations": [0],
+        "neighbors": [
+            [0],
+            [0],
+            [0],
+            [0]
+          ]
+    },
     {
         "module_name": "square_1",
         "sprite_name": "square_1.png",
@@ -137,6 +146,18 @@
           ]
     },
     {
+        "module_name": "hor_4",
+        "sprite_name": "hor_4.png",
+        "self_attraction": true,
+        "rotations": [0, 90],
+        "neighbors": [
+            [0],
+            [4],
+            [0],
+            [4]
+          ]
+    },
+    {
         "module_name": "hub_1",
         "sprite_name": "hub_1.png",
         "rotations": [0],
@@ -148,6 +169,17 @@
         ]
     },
     {
+        "module_name": "hub_4",
+        "sprite_name": "hub_4.png",
+        "rotations": [0],
+        "neighbors": [
+          [4],
+          [4],
+          [4],
+          [4]
+        ]
+    },
+    {
         "module_name": "end_1",
         "sprite_name": "end_1.png",
         "rotations": [0, 90, 180, 270],
@@ -155,6 +187,17 @@
           [0],
           [0],
           [1],
+          [0]
+        ]
+    },
+    {
+        "module_name": "end_4",
+        "sprite_name": "end_4.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [0],
+          [0],
+          [4],
           [0]
         ]
     },
@@ -170,12 +213,34 @@
         ]
     },
     {
+        "module_name": "T_4",
+        "sprite_name": "T_4.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [4],
+          [4],
+          [4],
+          [0]
+        ]
+    },
+    {
         "module_name": "turn_1",
         "sprite_name": "turn_1.png",
         "rotations": [0, 90, 180, 270],
         "neighbors": [
           [1],
           [1],
+          [0],
+          [0]
+        ]
+    },
+    {
+        "module_name": "turn_4",
+        "sprite_name": "turn_4.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [4],
+          [4],
           [0],
           [0]
         ]
@@ -191,7 +256,17 @@
           [0]
         ]
     },
-
+    {
+        "module_name": "turn_sharp_4",
+        "sprite_name": "turn_sharp_4.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [4],
+          [4],
+          [0],
+          [0]
+        ]
+    },
     {
         "module_name": "hor_1_2",
         "sprite_name": "hor_1_2.png",
@@ -203,8 +278,28 @@
           [1]
         ]
     },
-
-
+    {
+        "module_name": "hor_1_4",
+        "sprite_name": "hor_1_4.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [0],
+          [4],
+          [0],
+          [1]
+        ]
+    },
+    {
+        "module_name": "hor_2_4",
+        "sprite_name": "hor_2_4.png",
+        "rotations": [0, 90, 180, 270],
+        "neighbors": [
+          [0],
+          [4],
+          [0],
+          [2]
+        ]
+    },
     {
         "module_name": "turn_sharp_3_1",
         "sprite_name": "turn_sharp_3_1.png",

@@ -16,7 +16,7 @@ MAX_CONSECUTIVE_OVERRIDES = 20
 
 class App(object):
     def __init__(self):
-        random.seed(42)
+        random.seed()
         pygame.init()
         pygame.display.set_caption("WFC")
         self.display = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
