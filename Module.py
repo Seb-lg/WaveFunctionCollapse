@@ -46,7 +46,8 @@ class Module(object):
         self.links[direction].add(nodeB)
 
     def __repr__(self):
-        return f"{self.name:<20} {self.count}"
+        # return f"{self.name:<20} {self.count}"
+        return f"{self.name:<20}"
 
 
 class Position(object):

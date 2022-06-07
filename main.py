@@ -8,18 +8,21 @@ from pygame.locals import *
 
 from Module import Module, Position
 
-GRID_SIZE = 32
-TILE_SIZE = 32
+GRID_SIZE = 10
+TILE_SIZE = 64
 WINDOW_SIZE = GRID_SIZE * TILE_SIZE
-MAX_CONSECUTIVE_OVERRIDES = 20
+MAX_CONSECUTIVE_OVERRIDES = 30
 
+X_G = 18
+Y_G = 5
+BORDER = 20
 
 class App(object):
     def __init__(self):
         random.seed()
         pygame.init()
         pygame.display.set_caption("WFC")
-        self.display = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
+        self.display = pygame.display.set_mode((TILE_SIZE * X_G + X_G * BORDER, TILE_SIZE * Y_G + Y_G * BORDER))
         self.deltaTime = 0.01
         self.endTime = time.time()
 
@@ -29,10 +32,29 @@ class App(object):
         print(f"{len(self.modules)} modules, {self.socket_types_count + 1} socket types")
 
         # Initialize map
+        modules_list = list(self.modules.values())
+        random.shuffle(modules_list)
+        print(len(modules_list))
+        idx = 0
         self.map = []
-        for x in range(GRID_SIZE):
+        self.map = []
+        for x in range(Y_G):
             self.map.append([set([m for m in self.modules.values()])] *
-                            GRID_SIZE)
+                            X_G)
+        for y in range(Y_G):
+            for x in range(X_G):
+                idx += 1
+                module = modules_list[idx % len(modules_list)]
+                self.map[y][x] = [module]
+        while 1:
+            self.display_map()
+            pygame.display.update()
+            pygame.image.save(self.display,"./screenshot.jpg")
+            exit()
+        # self.map = []
+        # for x in range(GRID_SIZE):
+        #     self.map.append([set([m for m in self.modules.values()])] *
+        #                     GRID_SIZE)
 
         self.last_chosen_module = None
         self.overrides_count = 0
@@ -207,11 +229,11 @@ class App(object):
 #########################################
 # Display functions
     def display_map(self):
-        for y in range(GRID_SIZE):
-            for x in range(GRID_SIZE):
+        for y in range(Y_G):
+            for x in range(X_G):
                 if len(self.map[y][x]) == 1:
                     module = list(self.map[y][x])[0]
-                    self.display.blit(module.sprite, (x*TILE_SIZE, y*TILE_SIZE))
+                    self.display.blit(module.sprite, (x*TILE_SIZE + x * BORDER, y*TILE_SIZE + y * BORDER))
 
     def handle_loop(self):
         pygame.display.update()
