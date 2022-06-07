@@ -41,6 +41,8 @@ class App(object):
         self.waveshift_function_collapse()
         pprint(list(self.modules.values()))
         print(f"{self.overrides_count} overrides")
+        # Slow as now its finished
+        self.deltaTime = 1
 
 #########################################
 # Utility functions
@@ -107,6 +109,8 @@ class App(object):
                     if self.consecutive_overrides_count < MAX_CONSECUTIVE_OVERRIDES:
                         return self.last_chosen_module
             self.consecutive_overrides_count = 0
+        elif type == "random":
+            res = list(possible_modules)
         return random.choice(res)
 
 
@@ -120,7 +124,8 @@ class App(object):
             cell = self.get_minimal_entropy_cell()
             if cell is None:
                 break
-            module = self.choose_module_from_possibilities(cell, self.map[cell.y][cell.x], "lowest")
+            type = random.choice(["random", "override", "lowest"])
+            module = self.choose_module_from_possibilities(cell, self.map[cell.y][cell.x], type)
             self.last_chosen_module = module
             module.count += 1
             self.map[cell.y][cell.x] = {module}
